@@ -125,6 +125,28 @@
 
         /* 오른쪽: 뒤로가기 버튼 */
         .right-nav-area { flex-shrink: 0; }
+
+        /* NEW 뱃지 영역 */
+.new-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 7px;
+    background: #b04f33;
+    color: #fffdf9;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68em;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-radius: 999px;
+    vertical-align: middle;
+    animation: newBlink 1.5s ease-in-out infinite;
+}
+
+@keyframes newBlink {
+    0%,100% { opacity: 1; }
+    50% { opacity: .55; }
+}
+
     </style>
 </head>
 <body>
@@ -142,7 +164,7 @@
                 <li class="char-item" id="btn-ji-hae" onclick="openDiary('ji-hae')"><span class="char-name">지해건</span></li>
                 <li class="char-item" id="btn-gi-myeong" onclick="openDiary('gi-myeong')"><span class="char-name">기명준</span></li>
                 <li class="char-item" id="btn-choi-tae" onclick="openDiary('choi-tae')"><span class="char-name">최태진</span></li>
-                <li class="char-item" id="btn-gi-yeong" onclick="openDiary('gi-yeong')"><span class="char-name">기영문</span></li>
+                <li class="char-item" id="btn-gi-yeong" onclick="openDiary('gi-yeong')"><span class="char-name">기영문 <span class="new-badge">NEW!</span></span></li>
             </ul>
             
             <div class="left-bottom-nav">
@@ -530,7 +552,7 @@
                     </li>
 <li class="date-item" onclick="openStory('story-gi-yeong-2005')">
     <span class="date-value">2005</span>
-    <span class="date-title">여름의 끝</span>
+    <span class="date-title">여름의 끝</span><span class="new-badge">NEW!</span>
 </li>
                 </ul>
             </div>
