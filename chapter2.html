@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, user-scalable=yes">
+    <title>Chapter 2. 아빠가 다 해줄게 | 아카이브</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: #f4efe3;
+            color: #2c2520;
+            font-family: 'Noto Serif KR', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- 공통 버튼 및 스크롤바 스타일 --- */
+        .action-btn {
+            background-color: transparent; border: 1px solid #2c2520; color: #2c2520;
+            padding: 8px 16px; font-size: 0.9em; font-family: 'Noto Serif KR', serif;
+            cursor: pointer; transition: all 0.2s ease; text-decoration: none; display: inline-block;
+        }
+        .action-btn:hover { background-color: #2c2520; color: #f4efe3; }
+        
+        .scrollable::-webkit-scrollbar { display: none; }
+        .scrollable { -ms-overflow-style: none; scrollbar-width: none; overflow-y: auto; }
+
+        /* --- 책 레이아웃 --- */
+        .book-container {
+            background-color: #fffdf9;
+            width: 1200px;
+            height: 750px;
+            box-shadow: 0 15px 35px rgba(44, 37, 32, 0.08);
+            border: 1px solid #dcd1bd;
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+        }
+        .book-container::before {
+            content: ''; position: absolute; left: 50%; top: 0; width: 2px; height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.05), rgba(0,0,0,0.01), rgba(0,0,0,0.05));
+            z-index: 10;
+        }
+
+        .page { flex: 1; padding: 50px 60px; position: relative; height: 100%; }
+        .page-left { border-right: 1px solid rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; }
+        .page-right { position: relative; }
+
+        /* --- 왼쪽 페이지 (인물 목록) --- */
+        .left-header { font-family: 'Share Tech Mono', monospace; color: #8c7662; font-size: 1.1em; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 1px solid #e0d5c1; padding-bottom: 10px; }
+        .chapter-title { font-size: 2em; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+        .title-divider { width: 40px; height: 2px; background-color: #8c7662; margin-bottom: 30px; }
+        
+        .char-list { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .char-item {
+            margin-bottom: 15px; padding: 18px 20px; background: #fdfaf4; border: 1px solid #eee8db;
+            border-left: 4px solid #8c7662; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center;
+        }
+        .char-item:hover { transform: translateX(5px); box-shadow: 2px 2px 10px rgba(0,0,0,0.03); background: #fff; }
+        .char-item.active { background: #2c2520; color: #f4efe3; border-left-color: #b04f33; }
+        
+        .char-name { font-size: 1.2em; font-weight: 700; }
+        .left-bottom-nav { margin-top: auto; padding-top: 20px; }
+
+        /* --- 오른쪽 페이지 (동적 뷰) --- */
+        .view-section { display: none; height: 100%; flex-direction: column; }
+        .view-section.active { display: flex; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 1. 기본 대기 화면 */
+        .default-view { justify-content: center; align-items: center; text-align: center; color: #a39a8c; }
+        .default-view span { font-family: 'Share Tech Mono', monospace; font-size: 1.2em; border: 1px dashed #dcd1bd; padding: 20px 40px; }
+
+        /* 2. 일기장(날짜 목록) 화면 */
+        .diary-header { font-family: 'Share Tech Mono', monospace; font-size: 1.4em; color: #8c7662; border-bottom: 1px dashed #dcd1bd; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .diary-header span { font-size: 0.65em; color: #a39a8c; }
+        
+        .date-list { list-style: none; padding: 0; margin: 0; padding-bottom: 20px; }
+        .date-item { margin-bottom: 12px; padding: 15px; border-bottom: 1px dotted #dcd1bd; cursor: pointer; transition: all 0.2s; }
+        .date-item:hover { color: #b04f33; font-weight: bold; padding-left: 10px; background-color: rgba(0,0,0,0.02); }
+        .date-value { font-family: 'Share Tech Mono', monospace; color: #8c7662; margin-right: 15px; display: inline-block; min-width: 90px; }
+        .date-title { color: #2c2520; }
+
+        /* 3. 서사 본문(스토리) 화면 */
+        .story-header { margin-bottom: 25px; border-bottom: 2px solid #2c2520; padding-bottom: 15px; flex-shrink: 0; }
+        .story-date { font-family: 'Share Tech Mono', monospace; color: #b04f33; font-size: 1.1em; margin-bottom: 5px; }
+        .story-title { font-size: 1.6em; font-weight: 700; margin: 0; }
+        .story-content { flex-grow: 1; line-height: 1.9; font-size: 1.05em; color: #3a322c; padding-bottom: 30px; white-space: pre-line; word-break: keep-all; }
+        .strike-text { text-decoration: line-through; text-decoration-color: #4a3f35; text-decoration-thickness: 1.5px; opacity: 0.5; }
+
+        /* --- 하단 프롬프트 세팅 & 뒤로가기 영역 --- */
+        .story-footer {
+            margin-top: auto; padding-top: 15px; border-top: 1px solid #dcd1bd;
+            display: flex; justify-content: space-between; align-items: flex-end; flex-shrink: 0; gap: 20px;
+        }
+        
+        /* 왼쪽: 프롬프트 세팅 (토글 방식) */
+        .prompt-area { flex-grow: 1; display: flex; flex-direction: column; align-items: flex-start; }
+        .prompt-toggle-btn {
+            background: none; border: none; color: #b04f33; font-family: 'Noto Serif KR', serif; font-weight: 700;
+            cursor: pointer; padding: 5px 0; font-size: 0.9em; transition: color 0.2s;
+        }
+        .prompt-toggle-btn:hover { text-decoration: underline; color: #8c3b24; }
+        
+        .summary-box {
+            background-color: #fdfaf4; border: 1px solid #e0d5c1; border-left: 3px solid #b04f33;
+            padding: 15px; border-radius: 3px; display: none; flex-direction: column; gap: 12px;
+            width: 100%; margin-top: 10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.03);
+        }
+        .summary-box.open { display: flex; animation: fadeIn 0.3s ease; }
+        .summary-content { font-family: 'Share Tech Mono', 'Noto Serif KR', monospace; font-size: 0.85em; color: #4a3f35; line-height: 1.6; }
+        .copy-btn {
+            align-self: flex-start; background-color: #2c2520; color: #f4efe3; border: none;
+            padding: 6px 14px; border-radius: 3px; font-size: 0.8em; font-family: 'Noto Serif KR', serif; cursor: pointer; transition: all 0.2s;
+        }
+        .copy-btn:hover { background-color: #b04f33; }
+
+        /* 오른쪽: 뒤로가기 버튼 */
+        .right-nav-area { flex-shrink: 0; }
+
+        /* NEW 뱃지 영역 */
+.new-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 7px;
+    background: #b04f33;
+    color: #fffdf9;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68em;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-radius: 999px;
+    vertical-align: middle;
+    animation: newBlink 1.5s ease-in-out infinite;
+}
+
+@keyframes newBlink {
+    0%,100% { opacity: 1; }
+    50% { opacity: .55; }
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="book-container">
+        
+        <!-- ================= 왼쪽 페이지: 인물 목록 ================= -->
+        <div class="page page-left">
+            <div class="left-header">CHAPTER 2.</div>
+            <div class="chapter-title">아빠가 다 해줄게</div> 
+            <div class="title-divider"></div>
+            
+            <ul class="char-list">
+<li class="char-item" id="btn-an-seong" onclick="openDiary('an-seong')"><span class="char-name">해안성 <span class="new-badge">NEW!</span></span></li>
+            </ul>
+            
+            <div class="left-bottom-nav">
+                <a href="index.html" class="action-btn">↩️ 아카이브 목차로 돌아가기</a>
+            </div>
+        </div>
+
+
+        <!-- ================= 오른쪽 페이지: 동적 뷰 영역 ================= -->
+        <div class="page page-right">
+
+            <!-- 1. 기본 대기 화면 -->
+            <div id="view-default" class="view-section active default-view">
+                <span>[ 인물을 선택하면 기록이 열람됩니다 ]</span>
+            </div>
+
+
+            <!-- ================= [해안성] 데이터 ================= -->
+            <div id="diary-an-seong" class="view-section scrollable">
+                <div class="diary-header">해안성 개인 기록 <span>RECORD OF HAE AN-SEONG</span></div>
+                <ul class="date-list">
+                    <li class="date-item" onclick="openStory('story-an-seong-main')">
+                        <span class="date-value">XXXX.12.02</span> <span class="date-title">그녀의 마지막 밤</span><span class="new-badge">NEW!</span>
+                    </li>
+
+                </ul>
+            </div>
+            
+            <div id="story-an-seong-main" class="view-section scrollable">
+                <div class="story-header">
+                    <div class="story-date">xxxx.12.02</div>
+                    <h2 class="story-title">그녀의 마지막 밤</h2>
+                </div>
+                
+                <div class="story-content">모든 것이 얼어붙은 밤이었다.
+
+야근으로 푸석해진 얼굴 위로 형광등 불빛이 차갑게 쏟아졌다. 퇴근 직전, 지긋지긋한 서류더미에서 겨우 고개를 들었을 때, 책상 위에서 핸드폰이 발작하듯 울부짖었다. '재현이 형'. 액정에 뜬 이름에 피식 웃음이 났다. 이 시간에 또 연하 누나 흉을 보려고 전화했나. 아니면 태어날 조카 자랑이라도 하려고?
+
+[어, 형. 웬일이야.]
+
+내 가벼운 인사는 차가운 적막 속으로 공허하게 흩어졌다. 수화기 너머에서는 병원의 소음, 사이렌 소리, 정체를 알 수 없는 다급한 목소리들이 뒤엉켜 있었다. 그리고 그 모든 것을 뚫고, 수화기 너머로 들려온 낯선 목소리가 내 세상의 모든 소리를 집어삼켰다.
+
+[윤연하 씨 보호자분 되십니까?]
+
+아,
+심장이 멎는다는 건, 이런 느낌일까.
+
+보호자. 그 단어가 망치처럼 머리를 내리쳤다. 왜 재현이 형이 아니고, 내가. 왜. 형은 어디에 있기에, 왜 내가 이 전화를 받는 거지? 머릿속에서 수만 개의 경고등이 동시에 켜졌다. 손끝부터 피가 빠져나가며 온몸이 차갑게 굳어갔다.
+온몸의 혈관이 얼어붙는 것 같았다. 야근의 피로감 따위는 흔적도 없이 사라지고, 뼈를 에는 겨울밤의 공기보다 더 차가운 예감이 등줄기를 훑고 지나갔다.
+
+[…교통사고입니다. 음주운전 트럭이… 지금 서울한국병원 응급실로 이송했는데, 상태가 많이 위독합니다.]
+
+위독하다. 그 단어가 뇌리에 박히는 순간, 나는 간신히 숨을 몰아쉬며 물었다. 내 목소리가 아니었다. 지옥의 밑바닥에서 긁어내는 듯한, 낯설고 끔찍한 소리였다.
+
+[재현이 형은요? 같이 있었을 텐데, 형은…!]
+
+수화기 너머의 짧은 침묵. 그 몇 초가 영원처럼 느껴졌다. 제발, 제발 아니라고 해줘. 제발.
+
+[…운전자 분은… 현장에서 즉사하셨습니다.]
+
+재현이 형. 내 소중한 형.
+하지만 그 순간, 내 머릿속을 온통 차지한 것은 단 한 사람, 연하였다. 윤연하. 내 모든 계절을 지배했던 이름. 형의 연인이었기에, 감히 입 밖에 내지도 못하고 심장 가장 깊은 곳에 숨겨두었던 나의 사랑.
+
+제발. 제발. 신이시여, 만약 당신이 존재한다면.
+내 모든 것을 가져가도 좋으니, 제발 연하만은. 그녀만은 살려주세요.
+
+어떻게 병원까지 왔는지 기억이 나지 않는다. 엑셀을 밟는 발에 감각이 없었다. 눈앞이 흐려져 몇 번이나 사고가 날 뻔했는지도 모른다. 응급실에 도착하자마자 나는 미친놈처럼 뛰어다녔다. 피 냄새와 비명이 뒤엉킨 아수라장 속에서 오직 연하의 이름만을 외쳤다.
+
+[윤연하! 윤연하 환자 어디 있습니까!]
+
+수술실. 차가운 복도 끝, '수술중'이라는 붉은 등이 내 심장을 난도질했다. 그 앞에서 나는 무릎을 꿇고 기도했다. 평생 외면했던 신을, 세상의 모든 신을 붙잡고 빌었다. 제발, 제발 그녀만은 살려달라고. 내 모든 것을 가져가도 좋으니, 연하만은 제발. 
+
+차가운 벽에 등을 기댄 채, 할 수 있는 것은 오직 기도뿐이었다. 그녀와 처음 만났던 봄부터, 그녀가 형의 손을 잡고 내 앞에서 웃던 여름, 그리고 결혼 소식을 전하며 행복해하던 가을까지. 그녀와 함께했던 모든 순간이 파편처럼 머릿속을 스쳐 지나갔다. 사랑한다고, 단 한 번도 말하지 못했던 그 말이 썩은 피처럼 입안을 맴돌았다.
+
+얼마나 지났을까. 수술실 문이 열리고 의사가 나왔다. 나는 그의 바짓가랑이라도 붙잡을 기세로 달려들었다.
+
+[살아있죠? 그렇죠? 제발 그렇다고 말해주세요.]
+
+의사는 지친 눈으로 나를 내려다보며 고개를 저었다. 그 순간, 내 세상은 두 번째로 무너졌다.
+
+[…마음의 준비를 하셔야겠습니다. 과다출혈이 너무 심해서…]
+
+아,
+아…
+아아, 아………………
+
+세상이 끝났다. 내 첫사랑의 끝, 내 청춘의 종언. 그 모든 것이 담긴 문장이었다. 손이 부들부들 떨렸다. 눈앞이 아찔하게 흔들리며 사무실의 모든 풍경이 녹아내리는 것 같았다. 연하. 연하야. 안 돼. 너까지 잃을 수는 없어. 너만은 안 돼.
+
+세상이 무너졌다. 아니, 애초에 나에게 세상이란 것이 존재하기는 했던가. 연하가 없는 세상은 나에게 아무런 의미도 없었다. 그런데.
+
+[…하지만, 아이는 살렸습니다. 산모가 마지막까지 아이를 품고 있어서… 기적적으로, 아이는 건강합니다.]
+
+아이.
+
+그들의 아이.
+
+그리고 연하가 내게 마지막으로 남긴 생명.
+
+그녀가 자신의 목숨과 맞바꾼 생명.
+
+그녀가 내게 남긴 마지막 흔적.
+
+정신을 차렸을 때 나는 신생아실 유리창 앞에 서 있었다. 수많은 아기들 사이, 유독 작고 붉은 핏덩이가 보였다. 그 아이의 이름표는 텅 비어있었다. 연하와 재현이 형의 아이. 그리고… 내가 사랑했던 여자의 아이.
+
+유리창 너머로 보이는 그 작은 생명체를 보는 순간, 나는 비로소 소리 내어 울었다.
+
+뜨거운 것이 뺨을 타고 흘러내렸다. 이건 눈물이 아니다. 이건 내 스무 살의 모든 사랑이, 모든 희망이, 모든 절망이 한꺼번에 터져 나오는 비명이었다.
+
+이제 나는 살아야 한다.
+
+저 아이를 위해. 연하, 너를 대신해서.
+
+
+
+
+…
+…
+…연하야. 네가 내게 남긴 이 아이, 내가 어떻게든 지켜낼게. 내 목숨을 걸어서라도. 이것이 내가 너에게 줄 수 있는 마지막 사랑이라면, 기꺼이 내 모든 것을 바칠게.
+
+그러니 부디, 그곳에서는 아프지 마. …행복해야 해.</div>
+
+                <div class="story-footer">
+                    <div class="prompt-area">
+                        <button class="prompt-toggle-btn" onclick="togglePrompt('prompt-an-seong')">▶ 유저노트용 설정 보기</button>
+                        <div class="summary-box" id="prompt-an-seong">
+                            <div class="summary-content" id="sum-an-seong">#해안성 과거사<br>- 재현이 음주운전 사고로 즉사하고, 윤연하마저 위독한 상태로 병원에 옴. 수술 끝에 연하는 세상을 떠나지만, 그녀가 마지막까지 지켜낸 아이(유저)는 기적적으로 살아남음. 절망 속에 놓인 안성은 유저를 지키는 것을 삶의 목적으로 삼고 헌신을 다짐함.</div>
+                            <button class="copy-btn" onclick="copySummary('sum-an-seong')">복사하기</button>
+                        </div>
+                    </div>
+                    <div class="right-nav-area">
+                        <button class="action-btn" onclick="openDiary('an-seong')">⬅️ 날짜 목록으로</button>
+                    </div>
+                </div>
+            </div>
+
+    <!-- 인터랙션 스크립트 -->
+    <script>
+        function openDiary(charId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.char-item').forEach(el => el.classList.remove('active'));
+            
+            const diaryElement = document.getElementById('diary-' + charId);
+            if(diaryElement) {
+                diaryElement.classList.add('active');
+                document.getElementById('btn-' + charId).classList.add('active');
+            } else {
+                document.getElementById('view-default').classList.add('active');
+                document.getElementById('btn-' + charId).classList.add('active');
+            }
+        }
+
+        function openStory(storyId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            const storyElement = document.getElementById(storyId);
+            if(storyElement) {
+                storyElement.classList.add('active');
+            }
+        }
+
+        // 💡 프롬프트 박스 열기/닫기 토글 기능
+        function togglePrompt(promptId) {
+            const promptBox = document.getElementById(promptId);
+            if (promptBox.classList.contains('open')) {
+                promptBox.classList.remove('open');
+            } else {
+                promptBox.classList.add('open');
+            }
+        }
+
+        // 💡 텍스트 복사 기능 스크립트 (줄바꿈 <br> 처리 포함)
+        function copySummary(elementId) {
+            const textElement = document.getElementById(elementId);
+            // br 태그를 실제 줄바꿈(\n)으로 변환하여 복사
+            const textToCopy = textElement.innerHTML.replace(/<br\s*[\/]?>/gi, '\n').replace(/<\/?[^>]+(>|$)/g, ""); 
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('유저노트용 요약이 복사되었습니다!\n원하시는 곳에 붙여넣어 즐겨보세요.');
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                alert('복사에 실패했습니다. 직접 드래그해서 복사해주세요.');
+            });
+        }
+    </script>
+
+</body>
+</html>
