@@ -168,6 +168,27 @@
         .info-title { color: #7a6b5e; font-size: 0.9em; margin-bottom: 15px; }
         .btn-group { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
+        /* NEW 배지 영역 */   
+.new-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 7px;
+    background: #b04f33;
+    color: #fffdf9;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68em;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-radius: 999px;
+    vertical-align: middle;
+    animation: newBlink 1.5s ease-in-out infinite;
+}
+
+@keyframes newBlink {
+    0%,100% { opacity: 1; }
+    50% { opacity: .55; }
+}
+
     </style>
 </head>
 <body>
@@ -230,7 +251,10 @@
                             <a href="chapter1.html" class="db-link">
                                 <div>
                                     <span class="chapter-label">Chapter 1.</span>
-                                    <span class="chapter-name">태평의 남자들</span>
+<span class="chapter-name">
+    태평의 남자들
+    <span class="new-badge">NEW!</span>
+</span>
                                 </div>
                                 <div class="db-meta">[상태: 활성화]</div>
                             </a>
