@@ -84,9 +84,7 @@
         .diary-header span { font-size: 0.65em; color: #a39a8c; }
         
         .date-list { list-style: none; padding: 0; margin: 0; padding-bottom: 20px; }
-        .date-item {
-            margin-bottom: 12px; padding: 15px; border-bottom: 1px dotted #dcd1bd; cursor: pointer; transition: all 0.2s;
-        }
+        .date-item { margin-bottom: 12px; padding: 15px; border-bottom: 1px dotted #dcd1bd; cursor: pointer; transition: all 0.2s; }
         .date-item:hover { color: #b04f33; font-weight: bold; padding-left: 10px; background-color: rgba(0,0,0,0.02); }
         .date-value { font-family: 'Share Tech Mono', monospace; color: #8c7662; margin-right: 15px; display: inline-block; min-width: 90px; }
         .date-title { color: #2c2520; }
@@ -95,11 +93,38 @@
         .story-header { margin-bottom: 25px; border-bottom: 2px solid #2c2520; padding-bottom: 15px; flex-shrink: 0; }
         .story-date { font-family: 'Share Tech Mono', monospace; color: #b04f33; font-size: 1.1em; margin-bottom: 5px; }
         .story-title { font-size: 1.6em; font-weight: 700; margin: 0; }
-        
-        .story-content { flex-grow: 1; line-height: 1.9; font-size: 1.05em; color: #3a322c; padding-bottom: 40px; white-space: pre-line; word-break: keep-all; }
-        
+        .story-content { flex-grow: 1; line-height: 1.9; font-size: 1.05em; color: #3a322c; padding-bottom: 30px; white-space: pre-line; word-break: keep-all; }
         .strike-text { text-decoration: line-through; text-decoration-color: #4a3f35; text-decoration-thickness: 1.5px; opacity: 0.5; }
-        .right-bottom-nav { margin-top: auto; padding-top: 20px; border-top: 1px solid #dcd1bd; text-align: right; flex-shrink: 0; }
+
+        /* --- 하단 프롬프트 세팅 & 뒤로가기 영역 --- */
+        .story-footer {
+            margin-top: auto; padding-top: 15px; border-top: 1px solid #dcd1bd;
+            display: flex; justify-content: space-between; align-items: flex-end; flex-shrink: 0; gap: 20px;
+        }
+        
+        /* 왼쪽: 프롬프트 세팅 (토글 방식) */
+        .prompt-area { flex-grow: 1; display: flex; flex-direction: column; align-items: flex-start; }
+        .prompt-toggle-btn {
+            background: none; border: none; color: #b04f33; font-family: 'Noto Serif KR', serif; font-weight: 700;
+            cursor: pointer; padding: 5px 0; font-size: 0.9em; transition: color 0.2s;
+        }
+        .prompt-toggle-btn:hover { text-decoration: underline; color: #8c3b24; }
+        
+        .summary-box {
+            background-color: #fdfaf4; border: 1px solid #e0d5c1; border-left: 3px solid #b04f33;
+            padding: 15px; border-radius: 3px; display: none; flex-direction: column; gap: 12px;
+            width: 100%; margin-top: 10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.03);
+        }
+        .summary-box.open { display: flex; animation: fadeIn 0.3s ease; }
+        .summary-content { font-family: 'Share Tech Mono', 'Noto Serif KR', monospace; font-size: 0.85em; color: #4a3f35; line-height: 1.6; }
+        .copy-btn {
+            align-self: flex-start; background-color: #2c2520; color: #f4efe3; border: none;
+            padding: 6px 14px; border-radius: 3px; font-size: 0.8em; font-family: 'Noto Serif KR', serif; cursor: pointer; transition: all 0.2s;
+        }
+        .copy-btn:hover { background-color: #b04f33; }
+
+        /* 오른쪽: 뒤로가기 버튼 */
+        .right-nav-area { flex-shrink: 0; }
     </style>
 </head>
 <body>
@@ -113,21 +138,11 @@
             <div class="title-divider"></div>
             
             <ul class="char-list">
-                <li class="char-item" id="btn-gi-hwan" onclick="openDiary('gi-hwan')">
-                    <span class="char-name">기환석</span>
-                </li>
-                <li class="char-item" id="btn-ji-hae" onclick="openDiary('ji-hae')">
-                    <span class="char-name">지해건</span>
-                </li>
-                <li class="char-item" id="btn-gi-myeong" onclick="openDiary('gi-myeong')">
-                    <span class="char-name">기명준</span>
-                </li>
-                <li class="char-item" id="btn-choi-tae" onclick="openDiary('choi-tae')">
-                    <span class="char-name">최태진</span>
-                </li>
-                <li class="char-item" id="btn-gi-yeong" onclick="openDiary('gi-yeong')">
-                    <span class="char-name">기영문</span>
-                </li>
+                <li class="char-item" id="btn-gi-hwan" onclick="openDiary('gi-hwan')"><span class="char-name">기환석</span></li>
+                <li class="char-item" id="btn-ji-hae" onclick="openDiary('ji-hae')"><span class="char-name">지해건</span></li>
+                <li class="char-item" id="btn-gi-myeong" onclick="openDiary('gi-myeong')"><span class="char-name">기명준</span></li>
+                <li class="char-item" id="btn-choi-tae" onclick="openDiary('choi-tae')"><span class="char-name">최태진</span></li>
+                <li class="char-item" id="btn-gi-yeong" onclick="openDiary('gi-yeong')"><span class="char-name">기영문</span></li>
             </ul>
             
             <div class="left-bottom-nav">
@@ -163,15 +178,19 @@
                     <div class="story-date">MAIN</div><h2 class="story-title">기환석 메인 글</h2>
                 </div>
                 <div class="story-content">기록이 아직 작성되지 않았습니다.</div>
-                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('gi-hwan')">⬅️ 날짜 목록으로 돌아가기</button></div>
+                <div class="story-footer">
+                    <div class="prompt-area"></div>
+                    <div class="right-nav-area"><button class="action-btn" onclick="openDiary('gi-hwan')">⬅️ 날짜 목록으로</button></div>
+                </div>
             </div>
 
-            <!-- 기환석: 엄마에 대한 마지막 기억 -->
+            <!-- 기환석: 1993년 일기 -->
             <div id="story-gi-hwan-19930728" class="view-section scrollable">
                 <div class="story-header">
                     <div class="story-date">1993.07.28 (비)</div>
                     <h2 class="story-title">엄마에 대한 마지막 기억</h2>
                 </div>
+                
                 <div class="story-content">장마는 언제 끝나는 걸까.
 밤새도록 창문을 때리는 빗소리가 꼭 아빠 술주정 소리 같아서 싫다. 오늘도 아빠는 술을 마셨다. 대문 열리는 소리부터 달랐다. 쿵, 하고 벽에 몸을 부딪치는 소리. 비틀거리면서 들어와 신발을 아무렇게나 벗어 던지는 소리. 그리고 술 냄새. 집 안의 모든 공기가 썩어버리는 것 같은 냄새.
 
@@ -216,7 +235,19 @@
 '괜찮다'는 엄마의 목소리, '기와집'에 가자는 약속, 그 모든 게 빗소리에 쓸려가 버렸다.
 행복도, 엄마도, 아빠도, 나도.
 모두 쓸려가 버린다.</div>
-                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('gi-hwan')">⬅️ 날짜 목록으로 돌아가기</button></div>
+
+                <div class="story-footer">
+                    <div class="prompt-area">
+                        <button class="prompt-toggle-btn" onclick="togglePrompt('prompt-gi-hwan-93')">▶ 유저노트용 설정 보기</button>
+                        <div class="summary-box" id="prompt-gi-hwan-93">
+                            <div class="summary-content" id="sum-gi-hwan-93">#기환석 과거사<br>- 1993.07.28: 알코올 중독인 부친의 가정폭력으로 모친을 잃음. 아빠 없이 기와집에서 살자던 엄마의 약속을 지키지 못하고, 눈앞에서 엄마의 죽음을 무력하게 지켜봐야 했던 상처와 분노가 깊게 남아있음.</div>
+                            <button class="copy-btn" onclick="copySummary('sum-gi-hwan-93')">복사하기</button>
+                        </div>
+                    </div>
+                    <div class="right-nav-area">
+                        <button class="action-btn" onclick="openDiary('gi-hwan')">⬅️ 날짜 목록으로</button>
+                    </div>
+                </div>
             </div>
 
 
@@ -238,15 +269,19 @@
                     <div class="story-date">MAIN</div><h2 class="story-title">지해건 메인 글</h2>
                 </div>
                 <div class="story-content">기록이 아직 작성되지 않았습니다.</div>
-                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('ji-hae')">⬅️ 날짜 목록으로 돌아가기</button></div>
+                <div class="story-footer">
+                    <div class="prompt-area"></div>
+                    <div class="right-nav-area"><button class="action-btn" onclick="openDiary('ji-hae')">⬅️ 날짜 목록으로</button></div>
+                </div>
             </div>
 
-            <!-- 지해건: 1998년 금요일의 기억 -->
+            <!-- 지해건: 1998년 일기 -->
             <div id="story-ji-hae-19981002" class="view-section scrollable">
                 <div class="story-header">
                     <div class="story-date">1998.10.02 (금)</div>
                     <h2 class="story-title">금요일의 기억</h2>
                 </div>
+                
                 <div class="story-content">기억인지 뭔지, 가끔 뜬금없이 떠오르는 장면들이 있다.
 그중 하나는 유난히 햇살이 좋았던 가을 운동장이다. 열일곱. 교복보단 낡은 체육복이 더 익숙했던 시절. 흙먼지 날리는 운동장 구석에 앉아 있으면, 어디선가 나타나 옆에 쭈그려 앉던 애가 있었다. 이름은 이제 희미하다. 그냥, 작고 하얗던 여자애.
 
@@ -280,7 +315,19 @@
 특히, 작고, 하얗고, 웃는 게 예쁜… 그런 애한테는 더더욱.
 그런 애 옆에는 나 같은 놈이 아니라, 평범하고 좋은 놈이 서 있어야 맞는 거다.
 그게 세상 이치니까.</div>
-                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('ji-hae')">⬅️ 날짜 목록으로 돌아가기</button></div>
+
+                <div class="story-footer">
+                    <div class="prompt-area">
+                        <button class="prompt-toggle-btn" onclick="togglePrompt('prompt-ji-hae-98')">▶ 유저노트용 설정 보기</button>
+                        <div class="summary-box" id="prompt-ji-hae-98">
+                            <div class="summary-content" id="sum-ji-hae-98">#지해건 과거사<br>- 1998.10.02: 17살 때 마음을 열었던 여자애의 모친에게 고아라는 이유로 폭언을 들음. 여자애마저 자신을 무섭고 더럽다며 외면하자 큰 상처를 받음. 이후 누군가와 평범한 삶을 꾸린다는 기대를 완전히 체념하고 스스로를 고립시킴.</div>
+                            <button class="copy-btn" onclick="copySummary('sum-ji-hae-98')">복사하기</button>
+                        </div>
+                    </div>
+                    <div class="right-nav-area">
+                        <button class="action-btn" onclick="openDiary('ji-hae')">⬅️ 날짜 목록으로</button>
+                    </div>
+                </div>
             </div>
 
 
@@ -294,11 +341,13 @@
                 </ul>
             </div>
 
+            <!-- 기명준: 메인 서사 -->
             <div id="story-gi-myeong-main" class="view-section scrollable">
                 <div class="story-header">
                     <div class="story-date">MAIN</div>
                     <h2 class="story-title">기명준 메인 글</h2>
                 </div>
+
                 <div class="story-content">내 인생은 늘 그런 식이었다.
 눈앞의 너를 보자, 문득 그런 생각이 스쳤다. 지루하고 따분한 일상에 갑자기 툭 튀어나오는, 성가시지만 외면할 수는 없는 어떤 변수. 마치 잘 짜인 각본에 누군가 멋대로 던져 넣은 애드립처럼.
 
@@ -314,7 +363,19 @@
 
 그리고 지금, 내 앞에 네가 서 있다.
 저 녀석도 어쩌면 내 인생을 스쳐 지나갈 또 하나의 재미있는 해프닝일지도 모른다. 아니면, 아주 성가신 골칫덩어리가 되거나.</div>
-                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('gi-myeong')">⬅️ 날짜 목록으로 돌아가기</button></div>
+
+                <div class="story-footer">
+                    <div class="prompt-area">
+                        <button class="prompt-toggle-btn" onclick="togglePrompt('prompt-gi-myeong-main')">▶ 유저노트용 설정 보기</button>
+                        <div class="summary-box" id="prompt-gi-myeong-main">
+                            <div class="summary-content" id="sum-gi-myeong-main">#기명준 과거사<br>- 메인 서사: 고아원 시절부터 얽매이는 것과 책임을 혐오하며, 타투이스트로 일하며 여자들과 하룻밤 쾌락만 좇는 삶을 삼. 사랑을 비웃으며 아무도 진심으로 원한 적 없었으나, 갑자기 나타난 유저를 외면할 수 없는 성가신 변수라 느끼고 있음.</div>
+                            <button class="copy-btn" onclick="copySummary('sum-gi-myeong-main')">복사하기</button>
+                        </div>
+                    </div>
+                    <div class="right-nav-area">
+                        <button class="action-btn" onclick="openDiary('gi-myeong')">⬅️ 날짜 목록으로</button>
+                    </div>
+                </div>
             </div>
 
 
@@ -337,6 +398,7 @@
                     <div class="story-date">MAIN</div>
                     <h2 class="story-title">최태진 메인 글</h2>
                 </div>
+
                 <div class="story-content">내 인생의 시작이 어디였을까.
 법전을 펼치면 모든 것에는 기원과 경과, 그리고 결과가 있기 마련인데, 내 인생의 기원은 언제나 흐릿한 안갯속이었다.
 
@@ -362,7 +424,19 @@
 
 그렇게 발버둥 쳐서 올라온 이곳의 풍경도, 저 아래 밑바닥의 풍경과 본질적으로는 다를 바 없었다. 모두가 자신의 이익을 위해 아귀다툼을 벌이고, 추악한 욕망을 숨기지 못하는 곳. 어쩌면 나는 벗어날 수 없는 건지도 모른다. 그 지긋지긋한 인간 군상에게서, 그리고 그들을 혐오하면서도 결국 그들과 같은 모습으로 살아가고 있는 내 자신에게서도.
 …영원히.</div>
-                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('choi-tae')">⬅️ 날짜 목록으로 돌아가기</button></div>
+
+                <div class="story-footer">
+                    <div class="prompt-area">
+                        <button class="prompt-toggle-btn" onclick="togglePrompt('prompt-choi-tae-main')">▶ 유저노트용 설정 보기</button>
+                        <div class="summary-box" id="prompt-choi-tae-main">
+                            <div class="summary-content" id="sum-choi-tae-main">#최태진 과거사<br>- 메인 서사: 고아라는 꼬리표와 동정을 혐오해 독하게 공부해 변호사가 됨. 돈과 지위를 얻었으나 이혼 법정에서 마주하는 인간 군상의 추악함에 환멸을 느낌. 벗어나려 발버둥 쳤으나 여전히 밑바닥과 다를 바 없다는 지독한 공허함과 허무감을 앓음.</div>
+                            <button class="copy-btn" onclick="copySummary('sum-choi-tae-main')">복사하기</button>
+                        </div>
+                    </div>
+                    <div class="right-nav-area">
+                        <button class="action-btn" onclick="openDiary('choi-tae')">⬅️ 날짜 목록으로</button>
+                    </div>
+                </div>
             </div>
 
             <!-- 최태진: 2004년 일기 -->
@@ -371,6 +445,7 @@
                     <div class="story-date">2004.08.17 (화)</div>
                     <h2 class="story-title">고등학교 1학년 때 일기</h2>
                 </div>
+
                 <div class="story-content">짜증나게 끈적인다. 공기도, 내 살갗도, 이 방구석에 처박힌 내 인생도. 책상에 코를 박고 있어도 머릿속에 들어오는 건 없다. 눈앞의 글자들이 벌레처럼 기어 다니는 것 같다.
 
 저녁 처먹을 때, 그 새끼가 또 왔다.
@@ -430,7 +505,19 @@
 다신 나같은 애 안 생기게.
 
 <span class="strike-text">하루만 더 참자. ...일단 가자, 원장실로.</span></div>
-                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('choi-tae')">⬅️ 날짜 목록으로 돌아가기</button></div>
+
+                <div class="story-footer">
+                    <div class="prompt-area">
+                        <button class="prompt-toggle-btn" onclick="togglePrompt('prompt-choi-tae-04')">▶ 유저노트용 설정 보기</button>
+                        <div class="summary-box" id="prompt-choi-tae-04">
+                            <div class="summary-content" id="sum-choi-tae-04">#최태진 과거사<br>- 2004.08.17: 고1 시절, 학대하던 박승수 원장을 샤프로 찔러 살해하려 함. 하지만 "네 손으로 그으면 평생 간다"는 기환석의 만류에 살의를 거둠. 대신 가장 합법적이고 철저한 방법으로 원장의 모든 것을 빼앗아 숨통을 끊겠다고 맹세함.</div>
+                            <button class="copy-btn" onclick="copySummary('sum-choi-tae-04')">복사하기</button>
+                        </div>
+                    </div>
+                    <div class="right-nav-area">
+                        <button class="action-btn" onclick="openDiary('choi-tae')">⬅️ 날짜 목록으로</button>
+                    </div>
+                </div>
             </div>
 
 
@@ -448,7 +535,10 @@
                     <div class="story-date">MAIN</div><h2 class="story-title">기영문 메인 글</h2>
                 </div>
                 <div class="story-content">기록이 아직 작성되지 않았습니다.</div>
-                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('gi-yeong')">⬅️ 날짜 목록으로 돌아가기</button></div>
+                <div class="story-footer">
+                    <div class="prompt-area"></div>
+                    <div class="right-nav-area"><button class="action-btn" onclick="openDiary('gi-yeong')">⬅️ 날짜 목록으로</button></div>
+                </div>
             </div>
 
         </div>
@@ -477,6 +567,30 @@
             if(storyElement) {
                 storyElement.classList.add('active');
             }
+        }
+
+        // 💡 프롬프트 박스 열기/닫기 토글 기능
+        function togglePrompt(promptId) {
+            const promptBox = document.getElementById(promptId);
+            if (promptBox.classList.contains('open')) {
+                promptBox.classList.remove('open');
+            } else {
+                promptBox.classList.add('open');
+            }
+        }
+
+        // 💡 텍스트 복사 기능 스크립트 (줄바꿈 <br> 처리 포함)
+        function copySummary(elementId) {
+            const textElement = document.getElementById(elementId);
+            // br 태그를 실제 줄바꿈(\n)으로 변환하여 복사
+            const textToCopy = textElement.innerHTML.replace(/<br\s*[\/]?>/gi, '\n').replace(/<\/?[^>]+(>|$)/g, ""); 
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('유저노트용 요약이 복사되었습니다!\n원하시는 곳에 붙여넣어 즐겨보세요.');
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                alert('복사에 실패했습니다. 직접 드래그해서 복사해주세요.');
+            });
         }
     </script>
 
