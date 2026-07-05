@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, user-scalable=yes">
+    <title>Chapter 1. 태평의 남자들 | 아카이브</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: #f4efe3;
+            color: #2c2520;
+            font-family: 'Noto Serif KR', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- 공통 버튼 및 스크롤바 스타일 --- */
+        .action-btn {
+            background-color: transparent; border: 1px solid #2c2520; color: #2c2520;
+            padding: 8px 16px; font-size: 0.9em; font-family: 'Noto Serif KR', serif;
+            cursor: pointer; transition: all 0.2s ease; text-decoration: none; display: inline-block;
+        }
+        .action-btn:hover { background-color: #2c2520; color: #f4efe3; }
+        
+        .scrollable::-webkit-scrollbar { display: none; }
+        .scrollable { -ms-overflow-style: none; scrollbar-width: none; overflow-y: auto; }
+
+        /* --- 책 레이아웃 --- */
+        .book-container {
+            background-color: #fffdf9;
+            width: 1200px;
+            height: 750px;
+            box-shadow: 0 15px 35px rgba(44, 37, 32, 0.08);
+            border: 1px solid #dcd1bd;
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+        }
+        .book-container::before {
+            content: ''; position: absolute; left: 50%; top: 0; width: 2px; height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.05), rgba(0,0,0,0.01), rgba(0,0,0,0.05));
+            z-index: 10;
+        }
+
+        .page { flex: 1; padding: 50px 60px; position: relative; height: 100%; }
+        .page-left { border-right: 1px solid rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; }
+        .page-right { position: relative; }
+
+        /* --- 왼쪽 페이지 (인물 목록) --- */
+        .left-header { font-family: 'Share Tech Mono', monospace; color: #8c7662; font-size: 1.1em; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 1px solid #e0d5c1; padding-bottom: 10px; }
+        .chapter-title { font-size: 2em; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+        .title-divider { width: 40px; height: 2px; background-color: #8c7662; margin-bottom: 30px; }
+        
+        .char-list { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .char-item {
+            margin-bottom: 15px; padding: 18px 20px; background: #fdfaf4; border: 1px solid #eee8db;
+            border-left: 4px solid #8c7662; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center;
+        }
+        .char-item:hover { transform: translateX(5px); box-shadow: 2px 2px 10px rgba(0,0,0,0.03); background: #fff; }
+        .char-item.active { background: #2c2520; color: #f4efe3; border-left-color: #b04f33; }
+        
+        .char-name { font-size: 1.2em; font-weight: 700; }
+        .left-bottom-nav { margin-top: auto; padding-top: 20px; }
+
+        /* --- 오른쪽 페이지 (동적 뷰) --- */
+        .view-section { display: none; height: 100%; flex-direction: column; }
+        .view-section.active { display: flex; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 1. 기본 대기 화면 */
+        .default-view { justify-content: center; align-items: center; text-align: center; color: #a39a8c; }
+        .default-view span { font-family: 'Share Tech Mono', monospace; font-size: 1.2em; border: 1px dashed #dcd1bd; padding: 20px 40px; }
+
+        /* 2. 일기장(날짜 목록) 화면 */
+        .diary-header { font-family: 'Share Tech Mono', monospace; font-size: 1.4em; color: #8c7662; border-bottom: 1px dashed #dcd1bd; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .diary-header span { font-size: 0.65em; color: #a39a8c; }
+        
+        .date-list { list-style: none; padding: 0; margin: 0; padding-bottom: 20px; }
+        .date-item {
+            margin-bottom: 12px; padding: 15px; border-bottom: 1px dotted #dcd1bd; cursor: pointer; transition: all 0.2s;
+        }
+        .date-item:hover { color: #b04f33; font-weight: bold; padding-left: 10px; background-color: rgba(0,0,0,0.02); }
+        .date-value { font-family: 'Share Tech Mono', monospace; color: #8c7662; margin-right: 15px; display: inline-block; min-width: 90px; }
+        .date-title { color: #2c2520; }
+
+        /* 3. 서사 본문(스토리) 화면 */
+        .story-header { margin-bottom: 25px; border-bottom: 2px solid #2c2520; padding-bottom: 15px; flex-shrink: 0; }
+        .story-date { font-family: 'Share Tech Mono', monospace; color: #b04f33; font-size: 1.1em; margin-bottom: 5px; }
+        .story-title { font-size: 1.6em; font-weight: 700; margin: 0; }
+        
+        .story-content { flex-grow: 1; line-height: 1.9; font-size: 1.05em; color: #3a322c; padding-bottom: 40px; white-space: pre-line; word-break: keep-all; }
+        
+        .strike-text { text-decoration: line-through; text-decoration-color: #4a3f35; text-decoration-thickness: 1.5px; opacity: 0.5; }
+        .right-bottom-nav { margin-top: auto; padding-top: 20px; border-top: 1px solid #dcd1bd; text-align: right; flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="book-container">
+        
+        <!-- ================= 왼쪽 페이지: 인물 목록 ================= -->
+        <div class="page page-left">
+            <div class="left-header">CHAPTER 1.</div>
+            <div class="chapter-title">태평의 남자들</div> 
+            <div class="title-divider"></div>
+            
+            <ul class="char-list">
+                <li class="char-item" id="btn-gi-hwan" onclick="openDiary('gi-hwan')">
+                    <span class="char-name">기환석</span>
+                </li>
+                <li class="char-item" id="btn-ji-hae" onclick="openDiary('ji-hae')">
+                    <span class="char-name">지해건</span>
+                </li>
+                <li class="char-item" id="btn-gi-myeong" onclick="openDiary('gi-myeong')">
+                    <span class="char-name">기명준</span>
+                </li>
+                <li class="char-item" id="btn-choi-tae" onclick="openDiary('choi-tae')">
+                    <span class="char-name">최태진</span>
+                </li>
+                <li class="char-item" id="btn-gi-yeong" onclick="openDiary('gi-yeong')">
+                    <span class="char-name">기영문</span>
+                </li>
+            </ul>
+            
+            <div class="left-bottom-nav">
+                <a href="index.html" class="action-btn">↩️ 아카이브 목차로 돌아가기</a>
+            </div>
+        </div>
+
+
+        <!-- ================= 오른쪽 페이지: 동적 뷰 영역 ================= -->
+        <div class="page page-right">
+
+            <!-- 1. 기본 대기 화면 -->
+            <div id="view-default" class="view-section active default-view">
+                <span>[ 인물을 선택하면 기록이 열람됩니다 ]</span>
+            </div>
+
+
+            <!-- ================= [기환석] 데이터 ================= -->
+            <div id="diary-gi-hwan" class="view-section scrollable">
+                <div class="diary-header">기환석 개인 기록 <span>RECORD OF GI HWAN-SEOK</span></div>
+                <ul class="date-list">
+                    <li class="date-item" onclick="openStory('story-gi-hwan-main')">
+                        <span class="date-value">MAIN</span> <span class="date-title">기환석 메인 기록 (작성 예정)</span>
+                    </li>
+                    <li class="date-item" onclick="openStory('story-gi-hwan-19930728')">
+                        <span class="date-value">1993.07.28</span> <span class="date-title">엄마에 대한 마지막 기억</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div id="story-gi-hwan-main" class="view-section scrollable">
+                <div class="story-header">
+                    <div class="story-date">MAIN</div><h2 class="story-title">기환석 메인 글</h2>
+                </div>
+                <div class="story-content">기록이 아직 작성되지 않았습니다.</div>
+                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('gi-hwan')">⬅️ 날짜 목록으로 돌아가기</button></div>
+            </div>
+
+            <!-- 기환석: 엄마에 대한 마지막 기억 -->
+            <div id="story-gi-hwan-19930728" class="view-section scrollable">
+                <div class="story-header">
+                    <div class="story-date">1993.07.28 (비)</div>
+                    <h2 class="story-title">엄마에 대한 마지막 기억</h2>
+                </div>
+                <div class="story-content">장마는 언제 끝나는 걸까.
+밤새도록 창문을 때리는 빗소리가 꼭 아빠 술주정 소리 같아서 싫다. 오늘도 아빠는 술을 마셨다. 대문 열리는 소리부터 달랐다. 쿵, 하고 벽에 몸을 부딪치는 소리. 비틀거리면서 들어와 신발을 아무렇게나 벗어 던지는 소리. 그리고 술 냄새. 집 안의 모든 공기가 썩어버리는 것 같은 냄새.
+
+나는 방 안, 낡은 이불을 머리끝까지 뒤집어썼다. 빗소리보다 더 듣기 싫은 소리가 곧 시작될 걸 아니까.
+
+아빠의 고함 소리. 그리고 엄마의 작은 목소리.
+
+쨍그랑-!
+그릇 깨지는 소리에 몸이 움찔 떨렸다. 이불을 꽉 붙잡았다. 제발, 제발 오늘 밤은 그냥 넘어가게 해주세요. 빌었다. 누구한테 비는지도 모르면서.
+
+엄마의 짧은 비명. 그리고 퍽, 퍽, 하는 둔탁한 소리.
+나는 귀를 막았다. 소리가 안 들리는 게 아니었다. 내 머릿속에서 더 크게 울렸다.
+
+엄마는 항상 괜찮다고 했다.
+아빠가 잠들고 나면, 엄마는 내 방에 몰래 들어와 멍든 팔로 나를 안아줬다. 그리고 속삭였다.
+[환석아, 우리 나중에 크면… 저어기, 예쁜 기와집에서 살자. 마당도 넓은 데서. 아빠 없는 데서.]
+나는 엄마 품에 얼굴을 묻고 고개를 끄덕였다. 엄마한테서는 언제나 좋은 냄새가 났다. 그 냄새가 너무 좋아서, 나는 아빠가 없는 세상을 상상했다.
+
+퍽, 퍽, 소리가 계속 들렸다.
+엄마의 비명이 점점 작아졌다. 끅, 끅, 하고 숨넘어가는 소리로 바뀌었다.
+안 되겠다. 안 되겠어.
+
+나는 이불을 박차고 방문을 열었다.
+마루에는 술병이 뒹굴고, 밥상이 엎어져 있고, 그리고…
+아빠가 엄마 머리채를 잡고 있었다. 엄마는 바닥에 쓰러진 채였다. 입가에서 피가 흐르고 있었다.
+그걸 본 순간, 아무 생각도 나지 않았다.
+
+[하지 마!]
+소리치며 아빠한테 달려들었다. 아빠 다리를 붙잡고 물어뜯었다.
+[이 새끼가!]
+아빠는 나를 발로 찼다. 배를 맞고 나뒹굴었다. 숨이 턱, 막혔다. 컥컥거리며 일어나 다시 달려들려는데, 엄마가 나를 보며 말했다.
+[…오지 마, 환석아… 오지 마….]
+
+그게 마지막이었다.
+아빠가 엄마를 벽으로 밀쳤다. 쿵, 하는 끔찍한 소리가 났다. 엄마가 그대로 스르륵, 주저앉았다. 더 이상 아무 소리도 내지 않았다.
+아빠는 술이 좀 깼는지, 쓰러진 엄마를 보며 멍하니 서 있었다.
+나는 기어가서 엄마 손을 잡았다. 차가웠다.
+
+아무리 흔들어도 엄마는 대답이 없었다.
+그날, 빗소리는 밤새 그치지 않았다.
+나는 차가워지는 엄마 손을 붙잡고, 아무것도 하지 못했다. 지켜주지 못했다.
+'괜찮다'는 엄마의 목소리, '기와집'에 가자는 약속, 그 모든 게 빗소리에 쓸려가 버렸다.
+행복도, 엄마도, 아빠도, 나도.
+모두 쓸려가 버린다.</div>
+                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('gi-hwan')">⬅️ 날짜 목록으로 돌아가기</button></div>
+            </div>
+
+
+            <!-- ================= [지해건] 데이터 ================= -->
+            <div id="diary-ji-hae" class="view-section scrollable">
+                <div class="diary-header">지해건 개인 기록 <span>RECORD OF JI HAE-GEON</span></div>
+                <ul class="date-list">
+                    <li class="date-item" onclick="openStory('story-ji-hae-main')">
+                        <span class="date-value">MAIN</span> <span class="date-title">지해건 메인 기록 (작성 예정)</span>
+                    </li>
+                    <li class="date-item" onclick="openStory('story-ji-hae-19981002')">
+                        <span class="date-value">1998.10.02</span> <span class="date-title">금요일의 기억</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div id="story-ji-hae-main" class="view-section scrollable">
+                <div class="story-header">
+                    <div class="story-date">MAIN</div><h2 class="story-title">지해건 메인 글</h2>
+                </div>
+                <div class="story-content">기록이 아직 작성되지 않았습니다.</div>
+                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('ji-hae')">⬅️ 날짜 목록으로 돌아가기</button></div>
+            </div>
+
+            <!-- 지해건: 1998년 금요일의 기억 -->
+            <div id="story-ji-hae-19981002" class="view-section scrollable">
+                <div class="story-header">
+                    <div class="story-date">1998.10.02 (금)</div>
+                    <h2 class="story-title">금요일의 기억</h2>
+                </div>
+                <div class="story-content">기억인지 뭔지, 가끔 뜬금없이 떠오르는 장면들이 있다.
+그중 하나는 유난히 햇살이 좋았던 가을 운동장이다. 열일곱. 교복보단 낡은 체육복이 더 익숙했던 시절. 흙먼지 날리는 운동장 구석에 앉아 있으면, 어디선가 나타나 옆에 쭈그려 앉던 애가 있었다. 이름은 이제 희미하다. 그냥, 작고 하얗던 여자애.
+
+걔는 내가 좋다고 했다. 뭐가 좋으냐 물어도 그냥, 하고 웃었다. 그 웃음이 성가시면서도, 싫지는 않았던 것 같다. 걔랑 있으면 시끄러운 세상이 잠시 조용해지는 기분이었다. 처음이었다. 고아원 밖의 누군가와 매일 시시껄렁한 대화를 하고, 주말에 영화를 보고, 떡볶이를 먹는 그런, '평범한' 것들.
+
+어느 날 걔가 우리 집에 가보고 싶다고 했다. 집. 그런 게 나한테 있었나. 얼버무리며 고아원이라고 말했을 때, 걔 표정을 봤어야 했다. 놀란 것도, 실망한 것도 아닌, 그냥… 모르는 단어를 들은 아이 같은 얼굴. 그게 시작이었다.
+
+소문은 발보다 빨랐다. 걔네 부모님 귀에까지 들어갔겠지. 깡패 같은 덩치에, 부모도 없는 고아 새끼. 뻔한 레퍼토리다. 며칠간 연락이 없던 걔를 학교 후문에서 마주쳤다. 걔 혼자가 아니었다. 잔뜩 화가 난 얼굴의 어른, 걔네 엄마라는 사람이 내 앞을 막아섰다.
+
+"네가 해건이니?"
+
+그 여자는 위아래로 나를 훑어봤다. 무슨 벌레 보듯.
+내뱉는 말들은 칼보다 날카로웠다. 어디서 굴러먹던 놈인지, 부모 없는 티가 난다느니, 내 딸 인생 망치기 전에 꺼지라느니. 늘 듣던 말들이라 화도 안 났다. 그냥, 옆에 서서 고개만 푹 숙이고 있는 걔를 봤다. 아무 말도 없었다.
+
+내가 무슨 말을 하려 했을까. 됐다고, 이제 안 보면 될 거 아니냐고. 그렇게 말하려고 했던 것 같다. 그런데 나보다 걔가 먼저 입을 열었다. 바닥에 시선을 처박은 채로, 기어들어가는 목소리로.
+
+"…엄마 말이 맞아. 나도… 너 무서워. 더럽고… 그러니까, 이제 나 찾아오지 마."
+
+그 말을 듣는 순간, 머릿속에서 뭔가 툭, 끊어졌다.
+무섭다고? 더럽다고?
+어이가 없어서 웃음이 나왔다. 그제야 고개를 든 걔는 내 웃는 얼굴을 보고 질겁하며 뒷걸음질 쳤다. 그 얼굴을 보는 순간 깨달았다. 아, 정말이구나. 쟤도 저 여자랑 똑같은 생각을 하고 있었구나.
+
+그날 어떻게 집으로 돌아갔는지 기억나지 않는다.
+다만, 그날 밤 처음으로 사람을 팼다. 시비를 걸어온 다른 학교 놈들이었다. 이유는 없었다. 그냥, 내 안에 들끓는 걸 어딘가에 터뜨려야 했다. 주먹이 부서지는 감각, 뼈와 살이 뭉개지는 소리, 비명. 그 모든 게 시끄러워서, 오히려 머릿속이 조용해졌다.
+
+그날 이후로 많은 것이 바뀌었다.
+'평범한 삶' 같은 건 애초에 내 몫이 아니었다는 걸 인정하게 됐다. 사랑? 가족? 그건 나 같은 놈이 함부로 입에 담는 단어가 아니었다.
+
+그래서다.
+다시는 그런 멍청한 기대를 품지 않는다.
+특히, 작고, 하얗고, 웃는 게 예쁜… 그런 애한테는 더더욱.
+그런 애 옆에는 나 같은 놈이 아니라, 평범하고 좋은 놈이 서 있어야 맞는 거다.
+그게 세상 이치니까.</div>
+                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('ji-hae')">⬅️ 날짜 목록으로 돌아가기</button></div>
+            </div>
+
+
+            <!-- ================= [기명준] 데이터 ================= -->
+            <div id="diary-gi-myeong" class="view-section scrollable">
+                <div class="diary-header">기명준 개인 기록 <span>RECORD OF GI MYEONG-JUN</span></div>
+                <ul class="date-list">
+                    <li class="date-item" onclick="openStory('story-gi-myeong-main')">
+                        <span class="date-value">MAIN</span> <span class="date-title">기명준 메인 글</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="story-gi-myeong-main" class="view-section scrollable">
+                <div class="story-header">
+                    <div class="story-date">MAIN</div>
+                    <h2 class="story-title">기명준 메인 글</h2>
+                </div>
+                <div class="story-content">내 인생은 늘 그런 식이었다.
+눈앞의 너를 보자, 문득 그런 생각이 스쳤다. 지루하고 따분한 일상에 갑자기 툭 튀어나오는, 성가시지만 외면할 수는 없는 어떤 변수. 마치 잘 짜인 각본에 누군가 멋대로 던져 넣은 애드립처럼.
+
+기억의 파편들이 머릿속을 빠르게 스쳐 지나갔다. 고아원의 퀴퀴한 냄새. 똑같은 옷을 입고, 똑같은 밥을 먹던 아이들. 그 속에서 악착같이 튀어보려 했던 어린 날의 나. 내 옆에서 늘 한심하다는 듯 혀를 차던 내 동생, 영문이. 그리고 그런 우리 둘을 멀찍이서 지켜보던, 그때부터 이미 어른의 얼굴을 하고 있던 해건이 형.
+
+밤마다 몰래 담벼락을 넘어갔다. 처음 맛본 술은 생각보다 썼고, 처음 물었던 담배는 머리만 어지럽게 했다. 시시한 주먹질 끝에 터진 입술에서 비릿한 피 맛이 났다. 별 같잖은 이유로 시비를 걸어오는 놈들, 그 옆에서 실실 쪼개는 년들. 그 모든 게 지긋지긋하면서도, 동시에 살아있다는 유일한 증거 같았다.
+
+독립이라는 거창한 이름으로 고아원을 나왔을 때도 마찬가지였다. 아는 누나 집에 얹혀살면서 어깨너머로 타투를 배웠다. 피부에 잉크가 스며드는 감각, 누군가의 몸에 영원히 지워지지 않을 그림을 새기는 행위. 그건 꽤나 마음에 들었다. 내 손으로 무언가를 망가뜨리고, 동시에 새로운 걸 만들어내는 기분이었으니까.
+
+주위에 여자들은 들끓었다. 내게 뭘 원하는지 뻔히 보이는 눈빛들. 하룻밤의 온기를 나누고 나면 다음 날 아침엔 어김없이 차갑게 식어버리는 관계들. 사랑? 그딴 건 병신들이나 하는 짓이다. 그저 하룻밤의 쾌락, 그 이상도 이하도 아니었다. 나는 그 누구도 진심으로 원한 적 없었고, 그들도 마찬가지였을 거다.
+
+그렇게 살아왔다. 흥미가 생기면 일단 부딪혔고, 재미없어지면 가차 없이 버렸다. 책임 같은 건 지고 싶지 않았다. 내 인생 하나 건사하기도 버거운데, 누가 누굴 책임진단 말인가.
+
+그리고 지금, 내 앞에 네가 서 있다.
+저 녀석도 어쩌면 내 인생을 스쳐 지나갈 또 하나의 재미있는 해프닝일지도 모른다. 아니면, 아주 성가신 골칫덩어리가 되거나.</div>
+                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('gi-myeong')">⬅️ 날짜 목록으로 돌아가기</button></div>
+            </div>
+
+
+            <!-- ================= [최태진] 데이터 ================= -->
+            <div id="diary-choi-tae" class="view-section scrollable">
+                <div class="diary-header">최태진 개인 기록 <span>RECORD OF CHOI TAE-JIN</span></div>
+                <ul class="date-list">
+                    <li class="date-item" onclick="openStory('story-choi-tae-main')">
+                        <span class="date-value">MAIN</span> <span class="date-title">최태진 메인 글</span>
+                    </li>
+                    <li class="date-item" onclick="openStory('story-choi-tae-20040817')">
+                        <span class="date-value">2004.08.17</span> <span class="date-title">고등학교 1학년 때 일기</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 최태진: 메인 서사 -->
+            <div id="story-choi-tae-main" class="view-section scrollable">
+                <div class="story-header">
+                    <div class="story-date">MAIN</div>
+                    <h2 class="story-title">최태진 메인 글</h2>
+                </div>
+                <div class="story-content">내 인생의 시작이 어디였을까.
+법전을 펼치면 모든 것에는 기원과 경과, 그리고 결과가 있기 마련인데, 내 인생의 기원은 언제나 흐릿한 안갯속이었다.
+
+기억의 첫 페이지는 언제나 축축하고 서늘한 골목길에서 시작된다. 아마 비가 왔던 것 같다. 골판지 상자 위로 떨어지는 빗방울 소리가 유난히 크게 들렸던 밤. 울었는지, 울지 않았는지는 기억나지 않는다. 그저 막연한 추위와 배고픔만이 어렴풋이 남아있을 뿐이었고, 그게 내 인생에 대한 첫 번째 감각이었다.
+
+고아원은 지긋지긋한 곳이었다. 동정인지 연민인지 모를 눈빛들, 똑같이 나눠주는 멀건 죽, 그리고 나를 졸졸 따라다니며 성가시게 굴던 멍청한 형제들. 특히 기명준, 그놈은 어릴 때부터 쓸데없이 헤실거리며 사람 속을 긁었다. 그 옆에 붙어 다니는 영문이는 말없이 주먹부터 나가는 부류였고. 그나마 말이 통하는 건 해건이 형이었지만, 그 형은 언제나 제 몸보다 큰 책임감에 짓눌려 있었다.
+
+나는 그들이 한심했다. 고아라는 꼬리표를 당연하게 받아들이고, 내일이 없는 것처럼 구는 모습이 혐오스러웠다. 그래서 공부했다. 그들을 비웃을 자격이라도 얻으려면, 이 지긋지긋한 밑바닥에서 벗어나려면 그것밖에 방법이 없었으니까.
+
+고아원에서의 공부는 전쟁이었고, 나는 남들보다 두 배, 세 배는 더 노력해야 했다. 재능이나 환경 같은 건 애초에 내게 주어진 패가 아니었으니까. 가진 것이라곤 지독한 오기와 독선뿐이었다. '고아 출신'이라는 꼬리표는 잠재적 범죄자, 혹은 동정의 대상이라는 딱지와 동의어였다. 그 시선들을 찢어발기기 위해, 나는 책의 모서리가 닳아 없어질 때까지 파고들었다.
+
+책상에 앉아 문제를 푸는 동안에도 등 뒤에서는 늘 시끄러운 소리가 들려왔다. 기명준이 여자애를 울리고, 해건이 형이 그걸 수습하고, 영문이는 또 어디서 얻어터져 오고, 나는 그 모든 소음을 소음으로만 치부했다. 나와는 상관없는, 다른 세상의 일이라고.
+
+대학 합격 통지서를 받았을 때, 아무도 없는 곳에서 딱 한 번 웃었던 것 같다. 그것은 기쁨이라기보단 안도에 가까운 감정이었다. 이제 시작이라는, 벗어날 수 있다는 희미한 가능성을 확인한 순간. 하지만 대학 생활은 또 다른 전쟁터였다. 나는 늘 돈에 쪼들렸다. 당연한 일이었다. 고아에게 풍족함이란, 애초에 허락되지 않은 미지와도 같았으니까.
+
+학비와 생활비를 벌기 위해 온갖 아르바이트를 전전했다. 편의점 야간 아르바이트를 하며 매캐한 담배 연기 속에서 법전을 외웠고, 공사장에서 먼지를 뒤집어쓴 채 내일의 생계를 걱정했다. 잠은 사치였고, 식사는 생존을 위한 최소한의 행위였다. 젊음과 낭만으로 가득 찬 캠퍼스는 나와는 아무 상관없는 다른 세계의 풍경이었다.
+
+변호사가 되는 길은 단순했다. 오직 앞으로 나아가기만 하면 됐으니까. 나는 누구에게도 무시당하지 않을 위치에 오르고 싶었고, 돈 때문에 비굴해지고 싶지 않았다. 그래서 앞만 보고 달렸다. 지긋지긋한 과거를 조금이라도 빨리 지워버리고 싶어서.
+
+변호사가 된 후에도 달라진 건 많지 않았다. 좋은 옷을 입고, 비싼 차를 몰고, 번듯한 사무실을 갖게 되었지만, 내 안의 허기는 채워지지 않았다. 오히려 더 공허해졌다. 이혼 법정에 서서 사랑을 배신하고 서로를 할퀴는 인간 군상을 마주할 때마다 역겨움이 치밀었다. 그들은 내가 가지지 못한 것을 가졌으면서도, 그것을 제 손으로 부수는 어리석은 자들이었다. 나는 그들의 추악함을 비웃으며 승소를 이끌어냈지만, 재판이 끝나고 텅 빈 사무실로 돌아오면 어김없이 지독한 허무감이 몰려왔다.
+
+결국 다 똑같았다.
+
+그렇게 발버둥 쳐서 올라온 이곳의 풍경도, 저 아래 밑바닥의 풍경과 본질적으로는 다를 바 없었다. 모두가 자신의 이익을 위해 아귀다툼을 벌이고, 추악한 욕망을 숨기지 못하는 곳. 어쩌면 나는 벗어날 수 없는 건지도 모른다. 그 지긋지긋한 인간 군상에게서, 그리고 그들을 혐오하면서도 결국 그들과 같은 모습으로 살아가고 있는 내 자신에게서도.
+…영원히.</div>
+                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('choi-tae')">⬅️ 날짜 목록으로 돌아가기</button></div>
+            </div>
+
+            <!-- 최태진: 2004년 일기 -->
+            <div id="story-choi-tae-20040817" class="view-section scrollable">
+                <div class="story-header">
+                    <div class="story-date">2004.08.17 (화)</div>
+                    <h2 class="story-title">고등학교 1학년 때 일기</h2>
+                </div>
+                <div class="story-content">짜증나게 끈적인다. 공기도, 내 살갗도, 이 방구석에 처박힌 내 인생도. 책상에 코를 박고 있어도 머릿속에 들어오는 건 없다. 눈앞의 글자들이 벌레처럼 기어 다니는 것 같다.
+
+저녁 처먹을 때, 그 새끼가 또 왔다.
+박승수. '아버지'라고? 좆까는 소리하네.
+멀건 국에 밥 말아 넘기는데 등 뒤에서 그 역겨운 목소리가 기어 들어왔다. [오늘 밤에 사무실로] 오라고.
+씨발.
+그 순간 숟가락을 쥔 손에 힘이 들어갔다. 밥그릇에 처박아버릴까. 이 멀건 국물을 그 위선적인 낯짝에 부어버릴까.
+
+...주변 꼬맹이들 눈만 아니었어도.
+
+밤.
+방으로 돌아와서도 그 목소리가 귓가에서 떠나질 않는다. "사무실로 와라." "할 얘기가 있다."
+무슨 얘기를 하고 싶은 건데. 뻔하잖아.
+머리가 터질 것 같다. 책상에 있던 책들을 전부 바닥에 쓸어버렸다. 쾅, 쾅, 소리가 나도 아무도 오지 않는다. 이딴 곳은 원래 그러니까.
+
+필통에서 샤프를 꺼내 분해했다. 그 새끼한테서 후원품이라고 받은, 꽤 비싼 금속 샤프. 심을 다 빼내고 뾰족한 앞대가리만 남겼다. 이걸로 될까? 그 새끼 목. 부드러운 곳. 망설이지 않고 한 번에. 푹.
+상상만 했는데도 심장이 미친 듯이 뛴다. 손바닥이 축축하게 젖어온다.
+안 돼. 참아. 이걸로 내 인생 조질 순 없어.
+알아, 아는데… 씨발, 못 참겠다.
+
+결국 방을 나섰다. 발소리도 못 죽였다. 쿵, 쿵, 울리는 걸음 소리가 내 심장 소리 같았다. 손에 쥔 샤프 끝이 파고들어 손바닥이 아팠다. 이젠 다 상관없다.
+원장실 문틈으로 불빛이 새어 나온다. 어김없이 그 새끼는 저 안에 있다.
+문고리를 잡으려 손을 뻗는 순간.
+
+복도 끝 어둠 속에서 담뱃불이 작게 타올랐다 사라졌다.
+씨발. 누구야.
+인기척도 없이 서 있던 그림자가 천천히 모습을 드러냈다. 
+
+기환석.
+
+고아원 담벼락은 저 형에게 아무 의미도 없다는 걸 깜빡했다. 우리를 보러 온 건지, 아니면 그냥 지 꼴리는 대로 온 건지.
+형은 말없이 나를 쳐다봤다. 시선이 내 손에 들린 샤프에 잠시 머물렀다. 어떤 표정도 없어서 더 기분이 더러웠다.
+
+형이 아무 일 없다는 듯 내 어깨를 손으로 툭, 치며 지나간다. 그저 스치는 움직임이었는데, 손에 쥐고 있던 샤프가 힘없이 바닥으로 떨어졌다. 쨍, 하는 소리가 울렸다.
+나는 떨어진 샤프를 주우려 허리를 숙였다.
+
+그 순간, 귓가에 낮고 거친 목소리가 스며들었다.
+[죽을 만큼 패는 건 괜찮아도, 죽이지는 마.]
+그 목소리가 담배 연기처럼 희미했다.
+[네 손으로 직접 그으면, 평생 가.]
+
+그 말만 남기고 형은 복도 저편으로 사라졌다. 발소리 하나 없이.
+나는 한참 동안 그 자리에 서서 바닥에 떨어진 샤프를 내려다봤다.
+'평생 간다'고?
+...어쩌라고 씨발.
+
+그런데 이상했다. 터질 것 같던 심장이 가라앉았다. 손의 떨림이 멈췄다.
+이대로 감옥에 들어가면 너무 아까웠다. 내 손이. 내 시간이. 내 인생이.
+내가 참은 지옥같던 시간들이.
+
+다시 방으로 돌아와 바닥에 흩어진 책들을 주웠다.
+나는 여기서 나간다. 반드시.
+그래서 저 새끼가 평생 쳐다보지도 못할 곳까지 올라간다.
+그다음에, 아주 조용히, 합법적으로, 철저하게.
+저 새끼의 모든 걸 빼앗고 숨통을 끊어버릴 거다.
+
+다신 나같은 애 안 생기게.
+
+<span class="strike-text">하루만 더 참자. ...일단 가자, 원장실로.</span></div>
+                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('choi-tae')">⬅️ 날짜 목록으로 돌아가기</button></div>
+            </div>
+
+
+            <!-- ================= [기영문] 데이터 (빈 양식) ================= -->
+            <div id="diary-gi-yeong" class="view-section scrollable">
+                <div class="diary-header">기영문 개인 기록 <span>RECORD OF GI YEONG-MUN</span></div>
+                <ul class="date-list">
+                    <li class="date-item" onclick="openStory('story-gi-yeong-1')">
+                        <span class="date-value">MAIN</span> <span class="date-title">기영문 메인 기록 (작성 예정)</span>
+                    </li>
+                </ul>
+            </div>
+            <div id="story-gi-yeong-1" class="view-section scrollable">
+                <div class="story-header">
+                    <div class="story-date">MAIN</div><h2 class="story-title">기영문 메인 글</h2>
+                </div>
+                <div class="story-content">기록이 아직 작성되지 않았습니다.</div>
+                <div class="right-bottom-nav"><button class="action-btn" onclick="openDiary('gi-yeong')">⬅️ 날짜 목록으로 돌아가기</button></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 인터랙션 스크립트 -->
+    <script>
+        function openDiary(charId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.char-item').forEach(el => el.classList.remove('active'));
+            
+            const diaryElement = document.getElementById('diary-' + charId);
+            if(diaryElement) {
+                diaryElement.classList.add('active');
+                document.getElementById('btn-' + charId).classList.add('active');
+            } else {
+                document.getElementById('view-default').classList.add('active');
+                document.getElementById('btn-' + charId).classList.add('active');
+            }
+        }
+
+        function openStory(storyId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            const storyElement = document.getElementById(storyId);
+            if(storyElement) {
+                storyElement.classList.add('active');
+            }
+        }
+    </script>
+
+</body>
+</html>

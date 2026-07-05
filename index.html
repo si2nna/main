@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, user-scalable=yes">
+    <title>WORLDLINE LIBRARY | 아카이브</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: #f4efe3; /* 종이 질감 라이트 톤 */
+            color: #2c2520;
+            overflow-x: hidden;
+            font-family: 'Noto Serif KR', serif;
+        }
+
+        /* --- 공통 버튼 스타일 --- */
+        .action-btn {
+            background-color: transparent;
+            border: 1px solid #2c2520;
+            color: #2c2520;
+            padding: 10px 24px;
+            font-size: 0.95em;
+            font-family: 'Noto Serif KR', serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.5px;
+        }
+        .action-btn:hover {
+            background-color: #2c2520;
+            color: #f4efe3;
+        }
+
+        /* --- 1. 첫 페이지 (표지) --- */
+        #cover-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+            transition: opacity 0.8s ease;
+        }
+        .cover-title-en { font-family: 'Share Tech Mono', monospace; font-size: 1.2em; letter-spacing: 3px; color: #8c7662; margin-bottom: 10px; }
+        .cover-title-kr { font-size: 2.5em; font-weight: 700; margin: 0 0 15px 0; }
+        .cover-subtitle { font-size: 1.1em; font-weight: 700; margin-bottom: 40px; border-bottom: 1px solid #dcd1bd; padding-bottom: 20px; }
+        .cover-desc { font-size: 1em; line-height: 2; color: #4a3f35; margin-bottom: 50px; }
+        .system-footer { position: absolute; bottom: 30px; font-family: 'Share Tech Mono', monospace; font-size: 0.85em; color: #8c7662; }
+
+        /* --- 2. 시스템 로딩 화면 --- */
+        #loading-screen {
+            display: none;
+            font-family: 'Share Tech Mono', 'Noto Serif KR', monospace;
+            height: 100vh;
+            padding: 40px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: left;
+        }
+        .sys-box { display: inline-block; border-left: 2px solid #8c7662; padding-left: 15px; }
+        .sys-text { font-size: 1.1em; margin: 12px 0; color: #4a3f35; opacity: 0; transition: opacity 0.3s ease; letter-spacing: 0.5px; }
+        .cursor { display: inline-block; width: 8px; height: 1em; background-color: #8c7662; animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 5px; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* --- 3. 데이터베이스 (책 레이아웃) --- */
+        #database-page {
+            display: none;
+            min-height: 100vh;
+            padding: 50px 20px;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+        }
+
+        .book-container {
+            background-color: #fffdf9;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 650px;
+            box-shadow: 0 15px 35px rgba(44, 37, 32, 0.08);
+            border: 1px solid #dcd1bd;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden; 
+        }
+
+        /* 정중앙 접히는 선 (PC) */
+        .book-container::before {
+            content: '';
+            position: absolute;
+            left: 50%; top: 0; width: 2px; height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.05), rgba(0,0,0,0.01), rgba(0,0,0,0.05));
+            z-index: 10;
+        }
+
+        /* 책의 한 장(Spread) 컨테이너 */
+        .spread {
+            display: flex;
+            width: 100%;
+            min-height: 650px;
+            animation: fadeInSpread 0.5s ease-in-out;
+        }
+        @keyframes fadeInSpread {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page { flex: 1; padding: 45px 50px; display: flex; flex-direction: column; position: relative; }
+        .page-left { border-right: 1px solid rgba(0, 0, 0, 0.04); }
+
+        /* 왼쪽 페이지 헤더 (개요) */
+        .left-header { font-family: 'Share Tech Mono', monospace; color: #8c7662; font-size: 1.1em; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 1px solid #e0d5c1; padding-bottom: 10px; }
+        .left-title { font-size: 1.8em; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+        
+        /* 제목과 설명 사이의 깔끔한 디자인 선 (추가된 부분) */
+        .title-divider {
+            width: 40px;
+            height: 2px;
+            background-color: #8c7662;
+            margin-bottom: 25px;
+        }
+
+        .left-desc { color: #4a3f35; line-height: 1.8; margin-bottom: 30px; }
+        
+        .sys-stamp { margin-top: auto; font-family: 'Share Tech Mono', monospace; font-size: 0.85em; color: #a39a8c; border: 1px dashed #dcd1bd; padding: 15px; display: inline-block; }
+
+        /* 목차(Index) 스타일 */
+        .db-header { font-family: 'Share Tech Mono', monospace; font-size: 1.4em; color: #8c7662; border-bottom: 1px dashed #dcd1bd; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .db-header span { font-size: 0.65em; color: #a39a8c; }
+
+        .db-list { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        
+        .db-item { margin-bottom: 15px; padding: 15px; background: #fdfaf4; border: 1px solid #eee8db; border-left: 4px solid #8c7662; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .db-item:hover { transform: translateX(5px); box-shadow: 2px 2px 10px rgba(0,0,0,0.03); background: #fff; }
+        .db-link { text-decoration: none; color: #2c2520; display: flex; justify-content: space-between; align-items: center; }
+        
+        .chapter-label { font-family: 'Share Tech Mono', monospace; font-size: 0.75em; color: #8c7662; margin-right: 8px; vertical-align: middle; }
+        .chapter-name { font-size: 1.15em; font-weight: 700; vertical-align: middle; }
+        .db-meta { font-family: 'Share Tech Mono', monospace; font-size: 0.85em; color: #b04f33; font-weight: bold; }
+
+        /* 비활성화 상태 디자인 */
+        .db-item.disabled { border-left-color: #dcd1bd; background: #faf8f5; pointer-events: none; }
+        .db-item.disabled .chapter-label, 
+        .db-item.disabled .chapter-name, 
+        .db-item.disabled .db-meta { color: #b3aba1; }
+
+        /* 장 넘기기 네비게이션 버튼 */
+        .page-nav { display: flex; justify-content: flex-end; margin-top: 15px; }
+        .page-nav.nav-left { justify-content: flex-start; }
+        .nav-btn { background: none; border: none; color: #8c7662; font-family: 'Noto Serif KR', serif; font-size: 1em; cursor: pointer; padding: 5px 0; font-weight: 700; transition: color 0.2s; }
+        .nav-btn:hover { color: #b04f33; }
+
+        /* 하단 제어 영역 */
+        .control-area { margin-top: 30px; border-top: 1px solid #dcd1bd; padding-top: 20px; text-align: center; }
+        .info-title { color: #7a6b5e; font-size: 0.9em; margin-bottom: 15px; }
+        .btn-group { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+    </style>
+</head>
+<body>
+
+    <div id="cover-page">
+        <div class="cover-title-en">WORLDLINE LIBRARY</div>
+        <h1 class="cover-title-kr">세계선 도서관</h1>
+        <div class="cover-subtitle">독립된 세계관과 서사들이 보관되는 아카이브</div>
+        
+        <div class="cover-desc">
+            이곳은 수많은 시공간 속에 존재하는<br>
+            인물들의 기록과 고유한 서사가 보관된 곳입니다.<br><br>
+            각 장의 문을 열면, 해당 세계선만의<br>
+            독자적인 규칙과 이야기가 시작됩니다.
+        </div>
+
+        <button class="action-btn" onclick="enterArchive()" style="letter-spacing: 2px; padding: 12px 30px;">입장하기</button>
+
+        <div class="system-footer">
+            © Operated & Maintained by SYSTEM
+        </div>
+    </div>
+
+    <div id="loading-screen">
+        <div class="sys-box">
+            <div class="sys-text" id="sys-1"></div>
+            <div class="sys-text" id="sys-2"></div>
+            <div class="sys-text" id="sys-3"></div>
+            <div class="sys-text" id="sys-4" style="color: #b04f33; font-weight: bold;"></div>
+        </div>
+    </div>
+
+    <div id="database-page">
+        <div class="book-container">
+            
+            <div class="spread" id="spread-1">
+                <div class="page page-left">
+                    <div class="left-header">ARCHIVE OVERVIEW</div>
+                    
+                    <div class="left-title">세계선 아카이브</div> 
+                    <div class="title-divider"></div>
+                    
+                    <div class="left-desc">
+                        본 데이터베이스는 각기 다른 차원과 규칙을 가진 독립된 세계관들을 안정적으로 보존하고 있습니다.<br><br>
+                        우측의 목차를 통해 활성화된 개별 세계선의 기록을 열람할 수 있습니다.
+                    </div>
+                    
+                    <div class="sys-stamp">
+                        [SYSTEM_V.1.0]<br>
+                        LAST_UPDATE: 2026.07.05<br>
+                        MANAGER: 호씨나
+                    </div>
+                </div>
+
+                <div class="page page-right">
+                    <div class="db-header">INDEX <span>PAGE 1</span></div>
+                    
+                    <ul class="db-list">
+                        <li class="db-item">
+                            <a href="chapter1.html" class="db-link">
+                                <div>
+                                    <span class="chapter-label">Chapter 1.</span>
+                                    <span class="chapter-name">태평의 남자들</span>
+                                </div>
+                                <div class="db-meta">[상태: 활성화]</div>
+                            </a>
+                        </li>
+                        
+                        <li class="db-item disabled">
+                            <div class="db-link">
+                                <div><span class="chapter-label">Chapter 2.</span><span class="chapter-name">미정</span></div>
+                                <div class="db-meta">[상태: 준비 중]</div>
+                            </div>
+                        </li>
+                        <li class="db-item disabled">
+                            <div class="db-link">
+                                <div><span class="chapter-label">Chapter 3.</span><span class="chapter-name">미정</span></div>
+                                <div class="db-meta">[상태: 준비 중]</div>
+                            </div>
+                        </li>
+                        <li class="db-item disabled">
+                            <div class="db-link">
+                                <div><span class="chapter-label">Chapter 4.</span><span class="chapter-name">미정</span></div>
+                                <div class="db-meta">[상태: 준비 중]</div>
+                            </div>
+                        </li>
+                        <li class="db-item disabled">
+                            <div class="db-link">
+                                <div><span class="chapter-label">Chapter 5.</span><span class="chapter-name">미정</span></div>
+                                <div class="db-meta">[상태: 준비 중]</div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="page-nav">
+                        <button class="nav-btn" onclick="changeSpread(2)">다음 장 넘기기 ➡️</button>
+                    </div>
+
+                    <div class="control-area">
+                        <div class="info-title">오류 제보 및 정식 출시 세계관 문의</div>
+                        <div class="btn-group">
+                            <a href="https://open.kakao.com/me/ssina" target="_blank" class="action-btn">💬 오픈카톡 문의하기</a>
+                            <button class="action-btn" onclick="exitArchive()">↩️ 첫 장으로 가기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="spread" id="spread-2" style="display: none;">
+                
+                <div class="page page-left">
+                    <div class="db-header">INDEX <span>PAGE 2</span></div>
+                    
+                    <ul class="db-list">
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 6.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 7.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 8.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 9.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 10.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                    </ul>
+                    
+                    <div class="page-nav nav-left">
+                        <button class="nav-btn" onclick="changeSpread(1)">⬅️ 이전 장으로 돌아가기</button>
+                    </div>
+                </div>
+
+                <div class="page page-right">
+                    <div class="db-header">INDEX <span>PAGE 3</span></div>
+                    
+                    <ul class="db-list">
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 11.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 12.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 13.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 14.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                        <li class="db-item disabled"><div class="db-link"><div><span class="chapter-label">Chapter 15.</span><span class="chapter-name">미정</span></div><div class="db-meta">[상태: 준비 중]</div></div></li>
+                    </ul>
+
+                    <div class="control-area">
+                        <div class="info-title">오류 제보 및 정식 출시 세계관 문의</div>
+                        <div class="btn-group">
+                            <a href="https://open.kakao.com/me/ssina" target="_blank" class="action-btn">💬 오픈카톡 문의하기</a>
+                            <button class="action-btn" onclick="exitArchive()">↩️ 첫 장으로 가기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('database-page').style.display = 'none';
+
+        function changeSpread(spreadNumber) {
+            document.querySelectorAll('.spread').forEach(el => { el.style.display = 'none'; });
+            document.getElementById('spread-' + spreadNumber).style.display = 'flex';
+        }
+
+        function setSysText(id, text, delay, showCursor = false) {
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                el.innerHTML = text + (showCursor ? '<span class="cursor"></span>' : '');
+                el.style.opacity = '1';
+                if (id === 'sys-2') document.getElementById('sys-1').innerHTML = document.getElementById('sys-1').innerHTML.replace('<span class="cursor"></span>', '');
+                if (id === 'sys-3') document.getElementById('sys-2').innerHTML = document.getElementById('sys-2').innerHTML.replace('<span class="cursor"></span>', '');
+                if (id === 'sys-4') document.getElementById('sys-3').innerHTML = document.getElementById('sys-3').innerHTML.replace('<span class="cursor"></span>', '');
+            }, delay);
+        }
+
+        function enterArchive() {
+            const cover = document.getElementById('cover-page');
+            const loading = document.getElementById('loading-screen');
+            const database = document.getElementById('database-page');
+            
+            cover.style.opacity = '0';
+            document.querySelectorAll('.sys-text').forEach(el => { el.style.opacity = '0'; el.innerHTML = ''; });
+            changeSpread(1);
+
+            setTimeout(() => {
+                cover.style.display = 'none';
+                loading.style.display = 'flex';
+                
+                setSysText('sys-1', '> Establishing secure connection to SYSTEM...', 200, true);
+                setSysText('sys-2', '> Accessing Worldline Database... [Loading 99%]', 1000, true);
+                setSysText('sys-3', '> System Data Loading... [아카이브 담당자: 호씨나]', 1800, true);
+                setSysText('sys-4', '> Authentication Complete. Opening Index...', 2600, true);
+                
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                    database.style.display = 'flex'; 
+                    setTimeout(() => { database.style.opacity = '1'; }, 50);
+                }, 3500);
+            }, 800);
+        }
+
+        function exitArchive() {
+            const cover = document.getElementById('cover-page');
+            const loading = document.getElementById('loading-screen');
+            const database = document.getElementById('database-page');
+
+            database.style.opacity = '0';
+            document.querySelectorAll('.sys-text').forEach(el => { el.style.opacity = '0'; el.innerHTML = ''; });
+
+            setTimeout(() => {
+                database.style.display = 'none';
+                loading.style.display = 'flex';
+
+                setSysText('sys-1', '> Terminating Archive Database session...', 200, true);
+                setSysText('sys-2', '> Disconnecting system synchronization...', 1000, true);
+                setSysText('sys-3', '> 아카이브 접근 해제 완료. [담당자: 호씨나]', 1800, true);
+                setSysText('sys-4', '> Returning to main cover...', 2600, true);
+
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                    cover.style.display = 'flex';
+                    setTimeout(() => { cover.style.opacity = '1'; }, 50);
+                }, 3500);
+            }, 800);
+        }
+    </script>
+
+</body>
+</html>
